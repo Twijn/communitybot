@@ -18,5 +18,9 @@
   "homepage": "https://github.com/Twijn/communitybot#readme",
   "devDependencies": {
     "nodemon": "^2.0.5"
+  },
+  "dependencies": {
+    "discord.js": "^12.3.1",
+    "mysql": "^2.18.1"
   }
 }
