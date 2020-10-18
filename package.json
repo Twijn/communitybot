@@ -1,0 +1,22 @@
+{
+  "name": "community-bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "nodemon app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Twijn/communitybot.git"
+  },
+  "author": "Twijn",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Twijn/communitybot/issues"
+  },
+  "homepage": "https://github.com/Twijn/communitybot#readme",
+  "devDependencies": {
+    "nodemon": "^2.0.5"
+  }
+}
