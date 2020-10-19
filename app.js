@@ -16,17 +16,22 @@ for (const file of commandFiles) {
 }
 
 client.once('ready', () => {
-    console.log("Ready!");
+    console.log(`I am ready! Logged in as ${client.user.tag}!`);
+	console.log(`Bot has started, with ${client.users.cache.size} users, in ${client.channels.cache.size} channels of ${client.guilds.cache.size} guilds.`); 
 });
 
+// implement commands
 client.on('message', message => {
+    message.bot_id = client.user.id;
+
     if (message.channel.guild === null || message.channel.guild === undefined) return;
 
     cache.guild.get(message.channel.guild.id, (err, guild) => {
-        let prefix;
+        let prefix = "!";
         
         if (err) {
             if (err == "Guild was not found!") {
+                console.log("Guild not found. adding");
                 let name = message.channel.guild.name;
                 name = name.toLowerCase().replace(/ /g, "-").replace(/[^a-z-]/g);
                 cache.guild.add(message.channel.guild.id, name);
@@ -35,7 +40,6 @@ client.on('message', message => {
                 return;
             }
         } else {
-            message.guild = guild;
             prefix = guild.prefix;
         }
 
@@ -54,6 +58,12 @@ client.on('message', message => {
             message.reply('There was an error trying to execute that command!');
         }
     });
+});
+
+client.on("voiceStateUpdate", (oldState, newState) => {
+    if (oldState.channelID !== newState.channelID) {
+        
+    }
 });
 
 client.login(config.token);
