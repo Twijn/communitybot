@@ -1,6 +1,9 @@
 const con = require("../internal/database");
 
-let guilds = {};
+// The purpose of this file was to automatically cache the data received from the SQL server,
+// however currently it is just serving data directly from the database at all times.
+//
+// I'm worried this could adversely effect performance, hence the existence of this file.
 
 const cache = {
     guild: {
