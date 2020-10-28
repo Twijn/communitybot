@@ -1,4 +1,4 @@
-const cache = require("../internal/cache");
+const cache = require("../../internal/cache");
 
 const command = {
     name: 'setting'

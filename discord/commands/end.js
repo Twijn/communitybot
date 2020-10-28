@@ -1,5 +1,5 @@
-const cache = require("../internal/cache");
-const con = require("../internal/database");
+const cache = require("../../internal/cache");
+const con = require("../../internal/database");
 
 
 const findRole = (guild, name, callback = () => {}) => {

@@ -1,6 +1,6 @@
 const Discord = require("discord.js");
-const cache = require("../internal/cache");
-const con = require("../internal/database");
+const cache = require("../../internal/cache");
+const con = require("../../internal/database");
 
 const addChannelToDatabase = channel => {
     con.query("insert into channels (id, guild_id, name) values (?, ?, ?);", [channel.id, channel.guild.id, channel.name]);

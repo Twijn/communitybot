@@ -1,5 +1,5 @@
-const qm = require("../internal/queuemanager");
-const con = require("../internal/database");
+const qm = require("../../internal/queuemanager");
+const con = require("../../internal/database");
 const Discord = require("discord.js");
 
 const command = {
