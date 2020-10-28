@@ -17,7 +17,7 @@ for (const file of commandFiles) {
 }
 
 client.once('ready', () => {
-    console.log(`I am ready! Logged in as ${client.user.tag}!`);
+    console.log(`Discord bot ready! Logged in as ${client.user.tag}!`);
     console.log(`Bot has started with ${client.users.cache.size} users, in ${client.channels.cache.size} channels of ${client.guilds.cache.size} guilds.`);
 });
 
