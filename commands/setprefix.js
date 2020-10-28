@@ -4,6 +4,7 @@ const command = {
     name: 'setprefix'
     , description: 'Set the prefix for the current server'
     , usage: `setprefix <Prefix>`
+    , permission: 'MANAGE_CHANNELS'
     , execute(message, args) {
         cache.guild.get(message.guild.id, (err, guild) => {
             if (args.length > 0) {
