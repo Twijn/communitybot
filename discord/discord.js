@@ -4,15 +4,15 @@ const client = new Discord.Client();
 
 client.commands = new Discord.Collection();
 
-const config = require("./config.json");
-const con = require("./internal/database");
-const cache = require("./internal/cache");
-const qm = require("./internal/queuemanager");
+const config = require("../config.json");
+const con = require("../internal/database");
+const cache = require("../internal/cache");
+const qm = require("../internal/queuemanager");
 
 const commandFiles = fs.readdirSync('./discord/commands').filter(file => file.endsWith('.js'));
 
 for (const file of commandFiles) {
-    const command = require(`./discord/commands/${file}`);
+    const command = require(`./commands/${file}`);
     client.commands.set(command.name, command);
 }
 
