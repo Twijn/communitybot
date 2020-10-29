@@ -9,10 +9,10 @@ const con = require("./internal/database");
 const cache = require("./internal/cache");
 const qm = require("./internal/queuemanager");
 
-const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+const commandFiles = fs.readdirSync('./discord/commands').filter(file => file.endsWith('.js'));
 
 for (const file of commandFiles) {
-    const command = require(`./commands/${file}`);
+    const command = require(`./discord/commands/${file}`);
     client.commands.set(command.name, command);
 }
 
