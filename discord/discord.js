@@ -22,10 +22,13 @@ client.once('ready', () => {
 });
 
 // implement commands
-client.on('message', message => {
+client.on('message', async message => {
     message.bot_id = client.user.id;
 
     if (message.channel.guild === null || message.channel.guild === undefined) return;
+    
+    const communitybot = require("../internal/communitybot");
+    await communitybot.inject(message);
 
     cache.guild.get(message.channel.guild.id, (err, guild) => {
         let prefix = "!";
@@ -154,3 +157,5 @@ client.on("voiceStateUpdate", (oldState, newState) => {
 
 console.log("Logging in...");
 client.login(config.token);
+
+module.exports = {client: client};
