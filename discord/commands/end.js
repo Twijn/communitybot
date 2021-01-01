@@ -15,12 +15,27 @@ const findRole = (guild, name, callback = () => {}) => {
     });
 }
 
+const findChannel = (guild, name, callback = () => {}) => {
+    con.query("select id from channels where name = ? and guild_id = ?;", [name, guild.id], (err, result) => {
+        if (err) {console.error(err);return;}
+
+        if (result.length > 0) {
+            let channelId = result[0].id;
+            let channel = guild.channels.cache.find(channel => channel.id === channelId);
+
+            callback(channel);
+        }
+    });
+}
+
 const command = {
     name: 'end'
     , description: 'End the current community games lobby'
     , usage: `end`
     , permission: 'MANAGE_CHANNELS'
     , execute(message, args) {
+        let everyoneRole = message.guild.roles.cache.find(role => role.name === "@everyone");
+
         con.query("select c.id, g.channel_action as action from channels as c join guilds as g on g.id = c.guild_id where c.guild_id = ? and g.channel_action = 'delete' or  g.channel_action = 'hide';", [message.guild.id], (err, result) => {
             if (err) {console.log(err);return;}
 
@@ -32,7 +47,24 @@ const command = {
                     }
 
                     if (channelRow.action === 'hide') {
-                        //hide
+                        findChannel(message.guild, "Community Games!", async channel => {
+                            if (channel !== null) {
+                                await channel.overwritePermissions([
+                                    {
+                                        id: message.bot_id,
+                                        allow: ['VIEW_CHANNEL']
+                                    },
+                                    {
+                                        id: everyoneRole,
+                                        deny: ['VIEW_CHANNEL']
+                                    },
+                                ]);
+
+                                channel.children.each(async child => {
+                                    if (!child.permissionsLocked) await child.lockPermissions();
+                                });
+                            }
+                        });
                     }
                 } catch (err) {
                     console.error(err);
