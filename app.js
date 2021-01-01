@@ -4,4 +4,8 @@ require("./discord/discord");
 
 // Start Twitch Bot
 console.log("Starting Twitch Bot!");
-require("./twitch");
+require("./twitch/twitch");
+
+// Start Web Bot
+console.log("Starting Websocket!");
+require("./web/web");
