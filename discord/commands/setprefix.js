@@ -9,12 +9,10 @@ const command = {
         cache.guild.get(message.guild.id, (err, guild) => {
             if (args.length > 0) {
                 if (args[0].length <= 4) {
-                    cache.guild.update(guild.id, {prefix: args[0].toLowerCase()}, (success, err) => {
-                        if (success) {
-                            message.reply(`CommunityBot prefix set to \`${args[0].toLowerCase()}\``)
-                        } else {
-                            message.reply(`An error occurred! ${err}`);
-                        }
+                    message.cbguild.edit({prefix: args[0]}).then(() => {
+                        message.reply(`CommunityBot prefix set to \`${args[0]}\``);
+                    }).catch(error => {
+                        message.reply(`We encountered an error! ${error}`);
                     });
                 } else {
                     message.reply(`Prefix must be 4 characters or less in length!`);
