@@ -85,14 +85,10 @@ const qm = {
         });
     },
     addPlayerToGame: (guild, user) => {
-        con.query("update queue set status = 'game' where user_id = ? and guild_id = ? and status = 'queue';", [user.id, guild.id]);
-
         findOrCreateRole(guild, {data: {
             name: 'In Queue',
         }}, inQueueRole => {
-            if (user.roles.cache.find(role => role.id === inQueueRole.id)) {
-                user.roles.remove(inQueueRole);
-            }
+            user.roles.remove(inQueueRole);
         });
 
         findOrCreateRole(guild, {data: {
@@ -104,9 +100,28 @@ const qm = {
             }
         });
 
-        findChannel(guild, "Game Time!", gameTimeChannel => {
-            user.voice.setChannel(gameTimeChannel);
-        });
+        if (user.voice.channelID === null || user.voice.channelID === undefined) {
+            con.query("update queue set status = 'waiting' where user_id = ? and guild_id = ? and status = 'queue';", [user.id, guild.id]);
+            
+            const waitingMessage = new Discord.MessageEmbed()
+                .setColor('#0099ff')
+                .setTitle(`You were added into the game, but you're not currently in a channel!`)
+                .setDescription("You're not currently in a voice channel in `" + guild.name + "`. You have 30 seconds to join until the next person in the queue is chosen!");
+
+            user.send(waitingMessage);
+        } else {
+            con.query("update queue set status = 'game' where user_id = ? and guild_id = ? and status = 'queue';", [user.id, guild.id]);
+
+            findChannel(guild, "Game Time!", gameTimeChannel => {
+                user.voice.setChannel(gameTimeChannel);
+            });
+
+            const addedMessage = new Discord.MessageEmbed()
+                .setColor('#0099ff')
+                .setTitle(`You were added into the game!`);
+
+            user.send(addedMessage);
+        }
     },
     addPlayerToQueue: (guild, user) => {
         findRole(guild, "In Queue", inQueueRole => {
@@ -134,7 +149,12 @@ const qm = {
                 }
             });
         });
-    }
+    },
+    reserved: {
+        add: (guild, user) => {
+
+        }, 
+    },
 }
 
 module.exports = qm;
