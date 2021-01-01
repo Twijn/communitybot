@@ -1,4 +1,4 @@
-const con = require("../internal/database");
+const con = require("./database");
 
 // The purpose of this file was to automatically cache the data received from the SQL server,
 // however currently it is just serving data directly from the database at all times.
