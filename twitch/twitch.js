@@ -1,10 +1,10 @@
 const TwitchBot = require("twitch-bot");
-const config = require("./config.json");
+const config = require("../config.json");
 
 const Bot = new TwitchBot({
     username: config.twitch.username,
     oauth: config.twitch.oauth,
-    channels: config.twitch.channels
+    channels: config.twitch.channels,
 })
 
 Bot.on('join', channel => {
