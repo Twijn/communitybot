@@ -1,28 +1,51 @@
 const cache = require("../../internal/cache");
 
+let allowedProperties = ["url", "twitch_username", "prefix", "channel_action", "role_action"];
+
 const command = {
     name: 'setting'
     , description: 'View/set settings for the server'
-    , usage: `setting <Node> [Value]`
+    , usage: `setting [Node] [Value]`
     , permission: 'MANAGE_CHANNELS'
-    , execute(message, args) {
-        cache.guild.get(message.guild.id, (err, guild) => {
-            if (args.length > 0) {
-                if (args[0].length <= 4) {
-                    cache.guild.update(guild.id, {prefix: args[0].toLowerCase()}, (success, err) => {
-                        if (success) {
-                            message.reply(`CommunityBot prefix set to \`${args[0].toLowerCase()}\``)
-                        } else {
-                            message.reply(`An error occurred! ${err}`);
-                        }
+    , async execute(message, args) {
+        if (message.hasOwnProperty("cbguild") && message.cbguild !== null) {
+            if (args.length > 1) {
+                args[0] = args[0].toLowerCase();
+                
+                if (allowedProperties.includes(args[0])) {
+                    let object = {};
+                    object[args[0]] = args[1];
+
+                    message.cbguild.edit(object).then(() => {
+                        message.reply(`Value for \`${args[0]}\` set to \`${args[1]}\``);
+                    }).catch(error => {
+                        message.reply(`We encountered an error! ${error}`);
                     });
                 } else {
-                    message.reply(`Prefix must be 4 characters or less in length!`);
+                    message.reply(`Property \`${args[0]}\` was not found or can't be changed in this manner.`);
+                }
+            } else if (args.length > 0) {
+                args[0] = args[0].toLowerCase();
+
+                if (message.cbguild.hasOwnProperty(args[0]) && allowedProperties.includes(args[0])) {
+                    message.reply(`Value for \`${args[0]}\`: \`${message.cbguild[args[0]]}\``);
+                } else {
+                    message.reply(`Property \`${args[0]}\` was not found or can't be viewed in this manner.`);
                 }
             } else {
-                message.reply(`Invalid arguments! \`${(guild === undefined || guild === null ? '!' : guild.prefix) + command.usage.replace("{{prefix}}")}\``);
+                let result = "**Current Settings:**```";
+
+                let test = await message.cbguild.queue();console.log(test);
+
+                allowedProperties.forEach(property => {
+                    result += `\n${property}: ${message.cbguild.hasOwnProperty(property) ? message.cbguild[property] : 'unset'}`;
+                });
+
+                message.reply(result + "```");
             }
-        });
+        } else {
+            message.reply("Unable to find guild information!");
+        }
     }
 };
 
