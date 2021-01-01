@@ -25,6 +25,10 @@ const findOrCreateChannel = (guild, name, data, callback = () => {}) => {
                 channel = await guild.channels.create(name, data);
                 addChannelToDatabase(channel);
             }
+
+            if (data.hasOwnProperty("permissionOverwrites")) {
+                channel.overwritePermissions(data.permissionOverwrites);
+            }
             
             callback(channel);
         } else {
@@ -96,71 +100,90 @@ const command = {
                 if (results && results.length > 0)
                     url = results[0].url;
         
-                args.forEach(arg => {
-                    if (!isNaN(parseInt(arg))) {
-                        seats = parseInt(arg);
-                    } else if (arg.startsWith("<@") && arg.endsWith(">") && !arg.startsWith("<@&")) {
-                        let reservedUser = getUserFromMention(message.guild, arg);
-                        
-                        findOrCreateRole(guild, {data: {
-                            name: 'In Queue',
-                        }}, inQueueRole => {
-                            if (reservedUser.roles.cache.find(role => role.id === inQueueRole.id)) {
-                                reservedUser.roles.remove(inQueueRole);
-                            }
-                        });
-
-                        findOrCreateRole(guild, {data: {
-                            name: 'In Game',
-                        }}, inGameRole => {
-                            if (!reservedUser.roles.cache.find(role => role.id === inGameRole.id)) {
-                                console.log("adding in game role(2)");
-                                reservedUser.roles.add(inGameRole);
-                            }
-                        });
-
-                        reserved = [
-                            ...reserved
-                            , reservedUser
-                        ];
-                    }
-                });
-        
-                if (seats === null) {
-                    message.reply("Missing parameter for total slots");
-                    return;
-                } if (seats < 1 || seats > 100) {
-                    message.reply("Total slots must be over 0 and at or under 100");
-                    return;
-                }
-        
-                con.query("update guilds set seats = ? where id = ?;", [seats, guild.id]);
-        
-                con.query("delete from queue where guild_id = ?;", [guild.id], () => {
-                    reserved.forEach(reservedUser => {
-                        con.query("insert into queue (user_id, guild_id, status) values (?, ?, 'reserved');", [reservedUser.id, guild.id]);
-                    })
-                });
-        
-                let everyoneRole = guild.roles.cache.find(role => role.name === "@everyone");
-        
-                // create/load base category
-                findOrCreateChannel(guild, "Community Games!", {type: 'category'}, category => {
-                    // create/load roles
+                    
+                findOrCreateRole(guild, {
+                    data: {
+                        name: 'In Game',
+                    },
+                }, inGameRole => {
                     findOrCreateRole(guild, {
                         data: {
-                            name: 'In Game',
+                            name: 'In Queue',
                         },
-                    }, inGameRole => {
-                        findOrCreateRole(guild, {
-                            data: {
-                                name: 'In Queue',
-                            },
-                        }, inQueueRole => {
+                    }, inQueueRole => {
+                        args.forEach(arg => {
+                            if (!isNaN(parseInt(arg))) {
+                                seats = parseInt(arg);
+                            } else if (arg.startsWith("<@") && arg.endsWith(">") && !arg.startsWith("<@&")) {
+                                let reservedUser = getUserFromMention(message.guild, arg);
+
+                                if (reservedUser.roles.cache.find(role => role.id === inQueueRole.id)) {
+                                    reservedUser.roles.remove(inQueueRole);
+                                }
+
+                                if (!reservedUser.roles.cache.find(role => role.id === inGameRole.id)) {
+                                    reservedUser.roles.add(inGameRole);
+                                }
+
+                                reserved = [
+                                    ...reserved
+                                    , reservedUser
+                                ];
+                            }
+                        });
+                
+                        if (seats === null) {
+                            message.reply("Missing parameter for total slots");
+                            return;
+                        } if (seats < 1 || seats > 100) {
+                            message.reply("Total slots must be over 0 and at or under 100");
+                            return;
+                        }
+                
+                        con.query("update guilds set seats = ? where id = ?;", [seats, guild.id]);
+                
+                        con.query("delete from queue where guild_id = ?;", [guild.id], () => {
+                            reserved.forEach(reservedUser => {
+                                con.query("insert into queue (user_id, guild_id, status) values (?, ?, 'reserved');", [reservedUser.id, guild.id]);
+                            })
+                        });
+                
+                        let everyoneRole = guild.roles.cache.find(role => role.name === "@everyone");
+                
+                        // create/load base category
+                        findOrCreateChannel(guild, "Community Games!", {type: 'category'}, category => {
+                            category.overwritePermissions([]);
+
                             // create/load voice channels
+                            findOrCreateChannel(guild, "cg-bot", {
+                                type: 'text',
+                                parent: category,
+                                permissionOverwrites: [],
+                            });
+
+                            findOrCreateChannel(guild, "queue-chat", {
+                                type: 'text',
+                                parent: category,
+                                permissionOverwrites: [
+                                    {
+                                        id: inQueueRole,
+                                        allow: ['VIEW_CHANNEL'],
+                                    },
+                                    {
+                                        id: message.bot_id,
+                                        allow: ['VIEW_CHANNEL'],
+                                    },
+                                    {
+                                        id: everyoneRole.id,
+                                        deny: ['VIEW_CHANNEL'],
+                                    },
+                                ],
+                            });
+
                             findOrCreateChannel(guild, "Queue", {
                                 type: 'voice',
                                 parent: category,
+                                permissionOverwrites: [],
                             }, async queue => {
                                 let invite = await queue.createInvite({
                                     maxAge: 0, // 0 = infinite expiration
@@ -199,6 +222,24 @@ const command = {
                                     },
                                 ],
                             });
+                            findOrCreateChannel(guild, "game-chat", {
+                                type: 'text',
+                                parent: category,
+                                permissionOverwrites: [
+                                    {
+                                        id: inGameRole,
+                                        allow: ['VIEW_CHANNEL'],
+                                    },
+                                    {
+                                        id: message.bot_id,
+                                        allow: ['VIEW_CHANNEL'],
+                                    },
+                                    {
+                                        id: everyoneRole.id,
+                                        deny: ['VIEW_CHANNEL'],
+                                    },
+                                ],
+                            });
                             findOrCreateChannel(guild, "Game Time!", {
                                 type: 'voice',
                                 parent: category,
@@ -216,12 +257,27 @@ const command = {
                                         deny: ['CONNECT'],
                                     },
                                 ],
-                            }, channel => {
+                            }, async channel => {
                                 channel.setUserLimit(seats);
+                                
+                                let invite = await channel.createInvite({
+                                    maxAge: 0, // 0 = infinite expiration
+                                    maxUses: 0 // 0 = infinite uses
+                                }).catch(console.error);
+
+                                reserved.forEach(reservedUser => {
+                                    const notifyEmbed = new Discord.MessageEmbed()
+                                        .setColor('#0099ff')
+                                        .setTitle('You\'ve been added as a reserved community game member!')
+                                        .setDescription(`You've been added as a reserved community game user in \`${guild.name}\` by . [Click here to join!](${invite})`);
+    
+                                    reservedUser.send(notifyEmbed);
+                                })
                             });
                             findOrCreateChannel(guild, "Exit Game / Leave Queue", {
                                 type: 'voice',
                                 parent: category,
+                                permissionOverwrites: [],
                             });
                         });
                     });
